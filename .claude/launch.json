@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jobagent",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "jobagent", "serve", "--port", "5137"],
+      "port": 5137
+    }
+  ]
+}

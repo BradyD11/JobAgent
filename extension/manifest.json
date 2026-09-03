@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "JobAgent Autofill",
+  "version": "1.0.0",
+  "description": "Fills internship application forms from your JobAgent profile. Never submits \u2014 you review and send.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:5137/*",
+    "http://localhost:5137/*",
+    "https://boards.greenhouse.io/*",
+    "https://job-boards.greenhouse.io/*",
+    "https://*.greenhouse.io/*",
+    "https://jobs.lever.co/*",
+    "https://*.lever.co/*",
+    "https://jobs.ashbyhq.com/*",
+    "https://*.ashbyhq.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.workable.com/*",
+    "https://*.smartrecruiters.com/*",
+    "https://*.icims.com/*",
+    "https://*.jobvite.com/*",
+    "https://*.bamboohr.com/*",
+    "https://*.breezy.hr/*",
+    "https://*.rippling.com/*",
+    "https://*.tal.net/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.ashbyhq.com/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.workable.com/*",
+        "https://*.smartrecruiters.com/*",
+        "https://*.icims.com/*",
+        "https://*.jobvite.com/*",
+        "https://*.bamboohr.com/*",
+        "https://*.breezy.hr/*",
+        "https://*.rippling.com/*",
+        "https://*.tal.net/*"
+      ],
+      "js": [
+        "fields.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "JobAgent Autofill"
+  }
+}

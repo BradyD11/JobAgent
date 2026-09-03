@@ -1,0 +1,614 @@
+/* JobAgent — an instrument for triaging listings.
+   Palette is a cool neutral ink on paper, with a single saturated accent
+   reserved for the actions that matter: apply, and new-since-last-visit. */
+
+:root {
+  color-scheme: light dark;
+
+  --ink:        #16181d;
+  --ink-2:      #4a5160;
+  --ink-3:      #767f91;
+  --paper:      #f7f8fa;
+  --surface:    #ffffff;
+  --surface-2:  #f0f2f6;
+  --line:       #dfe3ea;
+  --line-2:     #c9cfda;
+
+  --accent:     #1f5fd0;
+  --accent-ink: #ffffff;
+  --accent-bg:  #e8effc;
+
+  --good:       #0f7a52;
+  --good-bg:    #e2f4ec;
+  --warn:       #8a5a00;
+  --warn-bg:    #fdf0d8;
+  --dim-bg:     #eceef2;
+
+  --radius:     6px;
+  --radius-lg:  10px;
+
+  /* Row density. The list is read for minutes at a time, so the row gets
+     vertical room; the cell inset stays tight so columns still read as a grid. */
+  --row-h:      46px;
+  --cell-x:     14px;
+  --gutter:     22px;
+
+  /* Column ceilings, sized from the widest real content rather than split
+     evenly: metadata takes what it needs and the role title keeps the rest. */
+  --w-company:  248px;
+  --w-location: 176px;
+  --w-source:   112px;
+  --w-term:     124px;
+  --w-date:     92px;
+  --w-actions:  190px;
+
+  /* Instrument-panel depth: a real offset with a soft blur, never a halo. */
+  --lift: 0 1px 2px rgba(16, 20, 32, .06), 0 4px 12px rgba(16, 20, 32, .07);
+  --lift-lg: 0 2px 4px rgba(16, 20, 32, .07), 0 12px 32px rgba(16, 20, 32, .12);
+
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #e8eaf0;
+    --ink-2:     #a4adbe;
+    --ink-3:     #838d9f;
+    --paper:     #101216;
+    --surface:   #171a20;
+    --surface-2: #1e222a;
+    --line:      #272c36;
+    --line-2:    #363d4a;
+
+    --accent:    #6699f5;
+    --accent-ink:#0b1220;
+    --accent-bg: #17253f;
+
+    --good:      #4cc493;
+    --good-bg:   #123227;
+    --warn:      #d9a441;
+    --warn-bg:   #33270f;
+    --dim-bg:    #22262f;
+
+    --lift: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 12px rgba(0, 0, 0, .34);
+    --lift-lg: 0 2px 4px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .5);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 13.5px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Browser surfaces themed from the palette, not left at defaults. */
+::selection { background: var(--accent); color: var(--accent-ink); }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 6px;
+  border: 3px solid var(--paper);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
+* { scrollbar-color: var(--line-2) transparent; scrollbar-width: thin; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ---------- header ---------- */
+
+header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 var(--gutter);
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-weight: 640;
+  font-size: 14px;
+  letter-spacing: -.012em;
+  margin-right: 2px;
+}
+.brand .count {
+  font: 500 11px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  letter-spacing: 0;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  max-width: 340px;
+}
+.search svg {
+  position: absolute;
+  left: 9px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-3);
+  pointer-events: none;
+}
+.search input {
+  width: 100%;
+  height: 30px;
+  padding: 0 10px 0 30px;
+  font: 400 13px var(--sans);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+}
+.search input::placeholder { color: var(--ink-3); }
+.search input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.spacer { flex: 1; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  font: 500 12.5px var(--sans);
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); color: var(--ink); }
+.btn:active:not(:disabled) { transform: translateY(.5px); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primary {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+  color: var(--accent-ink);
+}
+
+.btn .spin { animation: spin 900ms linear infinite; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- filter bar ---------- */
+
+.filters {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px var(--gutter);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.group { display: flex; align-items: center; gap: 4px; }
+.group > .lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: 3px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  font: 500 12.5px var(--sans);
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s ease, color .12s ease;
+}
+.chip:hover { background: var(--surface-2); color: var(--ink); }
+.chip[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+.chip .n {
+  font: 500 10.5px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+.chip[aria-pressed="true"] .n { color: var(--accent); opacity: .75; }
+
+/* ---------- table ---------- */
+
+main { flex: 1; overflow: auto; padding: 0 0 40px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  /* Declared column widths are honoured exactly; the leftover goes to the
+     one auto column (the role title) rather than being spread around. */
+  table-layout: fixed;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+  padding: 9px var(--cell-x);
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  user-select: none;
+}
+thead th.sortable { cursor: pointer; }
+thead th:first-child { width: var(--w-company); }
+thead th.loc  { width: var(--w-location); }
+thead th.src  { width: var(--w-source); }
+thead th.pay  { width: var(--w-term); }
+thead th.date { width: var(--w-date); }
+thead th.act  { width: var(--w-actions); }
+thead th.sortable:hover { color: var(--ink); }
+thead th .arrow { opacity: 0; margin-left: 3px; }
+thead th[data-dir] .arrow { opacity: 1; }
+thead th[data-dir] { color: var(--ink); }
+
+tbody tr {
+  height: var(--row-h);
+  border-bottom: 1px solid var(--line);
+  transition: background .1s ease;
+}
+tbody td { padding-top: 7px; padding-bottom: 7px; }
+tbody tr:hover { background: var(--surface); }
+tbody tr.is-new .co::before {
+  content: "";
+  position: absolute;
+  left: -13px; top: 50%;
+  width: 5px; height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+td { padding: 0 var(--cell-x); vertical-align: middle; }
+td:first-child, thead th:first-child { padding-left: var(--gutter); }
+td:last-child,  thead th:last-child  { padding-right: var(--gutter); }
+
+/* Company and role carry the scan. Both wrap to a second line rather than
+   truncating, so a long name stays readable instead of ending in an ellipsis. */
+/* Both carriers wrap to at most two lines: a long name stays readable instead
+   of ending in an ellipsis, while the row height stays predictable enough to
+   scan. min-width holds the column open -- a width alone collapses under a
+   wrapping cell. */
+td.co {
+  position: relative;
+  width: var(--w-company);
+  min-width: var(--w-company);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.006em;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+td.co > span, td.ti .role {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+td.ti {
+  max-width: 0;      /* let the title column absorb leftover width */
+  width: 100%;
+  line-height: 1.35;
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+/* Title clamps; the status tags stay beside it on the first line. A flex
+   wrapper inside the cell -- a flex <td> would break table column sizing. */
+td.ti > .rolewrap { display: flex; align-items: center; gap: 7px; }
+td.ti .role { flex: 1; min-width: 0; }
+td.ti .tag { flex: none; }
+tbody tr:hover td.ti { color: var(--ink); }
+
+/* Metadata columns are capped at what their real content needs, so the
+   space they would otherwise hold goes to the role title. */
+td.loc {
+  width: var(--w-location);
+  min-width: var(--w-location);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+td.loc > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+td.src { width: var(--w-source); }
+td.date {
+  width: var(--w-date);
+  white-space: nowrap;
+  font: 400 12.5px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+td.pay {
+  width: var(--w-term);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: 400 12.5px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+td.act { text-align: right; white-space: nowrap; width: var(--w-actions); }
+
+.tag {
+  display: inline-block;
+  padding: 1.5px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  border-radius: 4px;
+  background: var(--dim-bg);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.tag + .tag { margin-left: 3px; }
+.tag-applied     { background: var(--good-bg); color: var(--good); }
+.tag-saved       { background: var(--accent-bg); color: var(--accent); }
+.tag-interviewing{ background: var(--warn-bg); color: var(--warn); }
+.tag-rejected    { background: var(--dim-bg); color: var(--ink-3); }
+
+/* Row actions stay reserved-width so hover never reflows the row. */
+.rowacts { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .1s ease; }
+tr:hover .rowacts, tr:focus-within .rowacts { opacity: 1; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background .1s ease, color .1s ease;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+.icon-btn.on { color: var(--accent); }
+.icon-btn.on:hover { color: var(--accent); }
+
+.apply {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  font: 600 11.5px var(--sans);
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  text-decoration: none;
+  transition: background .12s ease, color .12s ease, border-color .12s ease;
+}
+tr:hover .apply, tr:focus-within .apply {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+.apply:hover, .apply:focus-visible {
+  background: var(--accent) !important;
+  color: var(--accent-ink) !important;
+}
+
+/* ---------- empty / loading ---------- */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--ink-3);
+}
+.state h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: -.01em;
+}
+.state p { margin: 0; max-width: 42ch; font-size: 12.5px; }
+.state svg { color: var(--line-2); }
+
+.skeleton-row td > span {
+  display: block;
+  height: 9px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.3s ease infinite;
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ---------- toast ---------- */
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--lift-lg);
+  /* Rest state is the visible one; entrance eases out from it. */
+  transform: translate(-50%, 0);
+  transition: opacity .22s ease, transform .28s cubic-bezier(.16, 1, .3, 1);
+}
+#toast[hidden] {
+  display: flex;
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  pointer-events: none;
+}
+#toast .undo {
+  font: 600 12.5px var(--sans);
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0 0 0 4px;
+  cursor: pointer;
+}
+#toast .undo:hover { text-decoration: underline; }
+
+footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px var(--gutter);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+footer .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--good); }
+footer .dot.bad { background: var(--warn); }
+footer .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 860px) {
+  td.pay, th.pay, td.date, th.date { display: none; }
+  .search { max-width: none; }
+}
+
+/* Below the tablet break the table stops being a table: each listing becomes
+   a two-line block, so nothing truncates and nothing scrolls sideways. */
+@media (max-width: 620px) {
+  header { gap: 10px; padding: 0 12px; }
+  .brand span:not(.count) { display: none; }
+
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: auto; }
+
+  tbody tr {
+    height: auto;
+    padding: 9px 14px 9px 24px;
+    position: relative;
+  }
+  tbody tr:hover { background: var(--surface); }
+
+  td, tbody td { padding: 0; }
+  td:first-child, thead th:first-child { padding-left: 0; }
+  td:last-child { padding-right: 0; }
+
+  /* Column widths belong to the desktop grid, not the stacked card. */
+  td.co, td.ti, td.loc, td.src, td.act { width: auto; min-width: 0; }
+  td.co > span, td.ti .role, td.loc > span { -webkit-line-clamp: 3; }
+  td.ti > .rolewrap { display: block; }
+  td.ti .tag { display: inline-block; vertical-align: middle; margin-left: 5px; }
+
+  td.co {
+    max-width: none;
+    font-size: 13.5px;
+    margin-bottom: 1px;
+    padding-right: 84px;   /* room for the Apply control */
+  }
+  tbody tr.is-new .co::before { left: -14px; top: 15px; margin-top: 0; }
+
+  td.ti {
+    max-width: none;
+    white-space: normal;
+    font-size: 12.5px;
+    line-height: 1.35;
+    padding-right: 84px;
+  }
+
+  /* Location and source return as a compact meta line. */
+  td.loc, td.src { display: inline-block; margin: 3px 6px 0 0; font-size: 11.5px; }
+  td.date, td.pay { display: none; }
+
+  td.act {
+    position: absolute;
+    top: 9px; right: 12px;
+    width: auto;
+  }
+  /* Narrow screens keep Apply only; triage belongs to the desktop pass. */
+  .rowacts { display: none; }
+  .apply { color: var(--accent); background: var(--accent-bg); }
+}
+
+/* Any pointer that cannot hover keeps the row actions on screen. */
+@media (hover: none) {
+  .rowacts { opacity: 1; }
+  .apply { color: var(--accent); background: var(--accent-bg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

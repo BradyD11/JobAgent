@@ -1,0 +1,13 @@
+/* Machine-filled fields carry a quiet marker so the user can see at a glance
+   what was typed for them and what still needs attention. */
+[data-jobagent-filled] {
+  background-color: rgba(31, 95, 208, .06) !important;
+  box-shadow: inset 2px 0 0 rgba(31, 95, 208, .55) !important;
+  transition: background-color .4s ease;
+}
+@media (prefers-color-scheme: dark) {
+  [data-jobagent-filled] {
+    background-color: rgba(102, 153, 245, .1) !important;
+    box-shadow: inset 2px 0 0 rgba(102, 153, 245, .6) !important;
+  }
+}

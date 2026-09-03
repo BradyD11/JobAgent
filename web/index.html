@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JobAgent</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%231f5fd0'/><path d='M4.5 6.5h7M4.5 9.5h4.5' stroke='white' stroke-width='1.6' stroke-linecap='round'/></svg>">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span>JobAgent</span>
+    <span class="count" id="brandCount"></span>
+  </div>
+
+  <label class="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+    </svg>
+    <input id="q" type="search" placeholder="Filter by company or title" autocomplete="off" spellcheck="false">
+  </label>
+
+  <div class="spacer"></div>
+
+  <button class="btn" id="refresh">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>
+    </svg>
+    <span id="refreshLabel">Refresh</span>
+  </button>
+</header>
+
+<div class="filters">
+  <div class="group" id="metroGroup">
+    <span class="lbl">Metro</span>
+  </div>
+  <div class="group" id="statusGroup">
+    <span class="lbl">Status</span>
+  </div>
+  <div class="group" id="sourceGroup">
+    <span class="lbl">Source</span>
+  </div>
+</div>
+
+<main>
+  <table>
+    <thead>
+      <tr>
+        <th class="sortable" data-sort="company">Company<span class="arrow">↓</span></th>
+        <th class="sortable" data-sort="title">Role<span class="arrow">↓</span></th>
+        <th class="loc sortable" data-sort="metros">Location<span class="arrow">↓</span></th>
+        <th class="src">Source</th>
+        <th class="pay">Term</th>
+        <th class="date sortable" data-sort="posted" data-dir="desc">Posted<span class="arrow">↓</span></th>
+        <th class="act"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="state"></div>
+</main>
+
+<footer>
+  <span class="dot" id="health"></span>
+  <span id="sourceLine">Loading…</span>
+  <div class="spacer" style="flex:1"></div>
+  <span class="mono" id="shown"></span>
+</footer>
+
+<div id="toast" hidden>
+  <span id="toastMsg"></span>
+  <button class="undo" id="toastUndo" hidden>Undo</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
