@@ -221,7 +221,8 @@ function rowHTML(j) {
   return `<tr class="${j.status === "new" ? "is-new" : ""}">
     <td class="co" title="${esc(j.company)}"><span>${esc(j.company)}</span></td>
     <td class="ti" title="${esc(j.title)}"><div class="rolewrap"><span class="role">${
-      esc(j.title)}</span>${tags.join("")}</div></td>
+      esc(j.title)}</span>${j.salary ? `<span class="pay-inline">${
+      esc(shortPay(j.salary))}</span>` : ""}${tags.join("")}</div></td>
     <td class="loc" title="${esc(j.location || "")}"><span>${
       esc((j.metros || []).join(", "))}</span></td>
     <td class="src"><span class="tag">${esc(j.source.replace(/WorkAtAStartup/g, "YC"))}</span></td>
@@ -244,13 +245,27 @@ function rowHTML(j) {
   </tr>`;
 }
 
-/* Term (Summer 2027) is present on ~80% of rows; salary on a handful.
-   Show whichever the listing actually carries. */
+/* Term (Summer 2027) is present on ~80% of rows. Salary now shows beside the
+   role instead of falling back into this column. */
 function termOf(j) {
   if (j.summary && /\b(Summer|Fall|Winter|Spring)\b/.test(j.summary)) {
     return j.summary.split(",")[0].trim();
   }
-  return j.salary || "";
+  return "";
+}
+
+/* Sources write pay a dozen ways ("$65K/yr - $70K/yr", "$8K - $12K / monthly").
+   Compress to one short token so it sits inline without crowding the title. */
+function shortPay(raw) {
+  const s = String(raw).trim();
+  const nums = s.match(/\$[\d.,]+\s*[KkMm]?/g);
+  if (!nums || !nums.length) return s.length > 16 ? s.slice(0, 15) + "…" : s;
+  const norm = (n) => n.replace(/\s+/g, "").toUpperCase();
+  const range = nums.length > 1 ? `${norm(nums[0])}–${norm(nums[1])}` : norm(nums[0]);
+  const per = /month/i.test(s) ? "/mo"
+            : /hour|\bhr\b/i.test(s) ? "/hr"
+            : /year|\byr\b/i.test(s) ? "/yr" : "";
+  return range + per;
 }
 
 function renderFooter() {

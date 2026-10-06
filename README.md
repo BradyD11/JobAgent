@@ -77,6 +77,13 @@ python3 -m jobagent list -q stripe --json
 python3 -m jobagent stats                  # counts and per-source health
 ```
 
+## Salary
+
+Shown beside the role when a listing carries it. Only Work at a Startup and
+Jobright publish compensation — Simplify's feed has no salary field, and
+LinkedIn's guest cards and detail pages don't expose one — so most rows have no
+figure to show.
+
 ## How filtering works
 
 A listing is kept when the title reads as software engineering, the posting is

@@ -92,5 +92,6 @@ def _parse(row: dict, metro: str) -> Job | None:
         url=f"https://jobright.ai/jobs/info/{job_id}" if job_id else "",
         metros=metros,
         posted=(job.get("publishTime") or "")[:10] or None,
+        salary=job.get("salaryDesc") or None,
         summary=job.get("jobSummary"),
     )

@@ -18,7 +18,7 @@
   --accent-ink: #ffffff;
   --accent-bg:  #e8effc;
 
-  --good:       #0f7a52;
+  --good:       #0b6644;
   --good-bg:    #e2f4ec;
   --warn:       #8a5a00;
   --warn-bg:    #fdf0d8;
@@ -359,6 +359,19 @@ td.ti {
 td.ti > .rolewrap { display: flex; align-items: center; gap: 7px; }
 td.ti .role { flex: 1; min-width: 0; }
 td.ti .tag { flex: none; }
+
+/* Pay sits beside the role in tabular mono -- it reads as a figure, not a
+   label, so it stays distinct from the status tags next to it. */
+.pay-inline {
+  flex: none;
+  font: 500 11.5px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--good);
+  background: var(--good-bg);
+  padding: 1.5px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
 tbody tr:hover td.ti { color: var(--ink); }
 
 /* Metadata columns are capped at what their real content needs, so the

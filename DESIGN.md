@@ -49,6 +49,13 @@ last — Term took 171px for an 11-character string while 65 role titles
 truncated. Declaring the widths moved ~100px into the role column and cut
 truncation to 3 cells in 541.
 
+Pay rides **inline beside the role title**, not in its own column: only ~3 of
+1,200 listings carry compensation, so a dedicated column would be blank 99.8% of
+the time. It renders as a tabular-mono chip in the positive hue, so it reads as a
+figure rather than a label and stays distinct from the status tags beside it.
+Source strings vary ("$65K/yr - $70K/yr", "$8K - $12K / monthly"); `shortPay()`
+compresses them to one token (`$65K–$70K/yr`, `$8K–$12K/mo`).
+
 Company, role, and location wrap to **two lines** (`-webkit-line-clamp`) rather
 than truncating: a long name stays readable, and the row height stays
 predictable enough to scan. A `width` alone collapses under a wrapping cell, so
