@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS source_runs (
 );
 """
 
+# Untouched listings no board has returned in 3 days are closed postings; hide them.
+# Anything the user acted on (saved, applied...) stays visible.
+LIVE = "(status != 'new' OR last_seen >= strftime('%Y-%m-%dT%H:%M:%S', 'now', '-3 days'))"
+
 STATUSES = ("new", "saved", "applied", "interviewing", "rejected", "dismissed")
 
 
@@ -117,7 +121,7 @@ def is_stale(conn, source: str, hours: float) -> bool:
 
 def query_jobs(conn, metro=None, status=None, source=None, search=None,
                days=None, limit=1000) -> list[dict]:
-    sql = "SELECT * FROM jobs WHERE 1=1"
+    sql = f"SELECT * FROM jobs WHERE {LIVE}"
     args: list = []
     if metro:
         sql += " AND metros LIKE ?"
@@ -158,13 +162,13 @@ def set_status(conn, job_id: str, status: str) -> bool:
 
 
 def stats(conn) -> dict:
-    total = conn.execute("SELECT COUNT(*) c FROM jobs WHERE status!='dismissed'").fetchone()["c"]
+    total = conn.execute(f"SELECT COUNT(*) c FROM jobs WHERE status!='dismissed' AND {LIVE}").fetchone()["c"]
     by_status = {r["status"]: r["c"] for r in conn.execute(
-        "SELECT status, COUNT(*) c FROM jobs GROUP BY status")}
+        f"SELECT status, COUNT(*) c FROM jobs WHERE {LIVE} GROUP BY status")}
     runs = [dict(r) for r in conn.execute(
         "SELECT * FROM source_runs ORDER BY source")]
     by_metro: dict[str, int] = {}
-    for r in conn.execute("SELECT metros FROM jobs WHERE status!='dismissed'"):
+    for r in conn.execute(f"SELECT metros FROM jobs WHERE status!='dismissed' AND {LIVE}"):
         for m in json.loads(r["metros"] or "[]"):
             by_metro[m] = by_metro.get(m, 0) + 1
     return {"total": total, "by_status": by_status,
